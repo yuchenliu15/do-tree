@@ -7,6 +7,7 @@ package main
 import (
     "fmt"
     "os"
+	"log"
 
     tea "github.com/charmbracelet/bubbletea"
 )
@@ -29,6 +30,7 @@ func (m model) Init() tea.Cmd {
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	log.Printf("msg: %T\n", msg)
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -72,6 +74,16 @@ func (m model) View() string {
 
 func main() {
 	p := tea.NewProgram(initalModel())
+
+	if len(os.Getenv("DEBUG")) > 0 {
+		fmt.Printf("Running in debug mode\n")
+		f, err := tea.LogToFile("debug.log", "debug")
+		if err != nil {
+			fmt.Printf("Error could not log: %s", err)
+		}
+		defer f.Close()
+	}
+
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Error occured: %v\n", err)
 		os.Exit(1)
