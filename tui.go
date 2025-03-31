@@ -1,4 +1,4 @@
-package main
+package dotree 
 
 // These imports will be used later on the tutorial. If you save the file
 // now, Go might complain they are unused, but that's fine.
