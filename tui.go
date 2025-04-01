@@ -1,4 +1,4 @@
-package dotree 
+package main 
 
 // These imports will be used later on the tutorial. If you save the file
 // now, Go might complain they are unused, but that's fine.
@@ -74,7 +74,7 @@ func (m model) View() string {
 
 func main() {
 	p := tea.NewProgram(initalModel())
-
+	
 	if len(os.Getenv("DEBUG")) > 0 {
 		fmt.Printf("Running in debug mode\n")
 		f, err := tea.LogToFile("debug.log", "debug")
@@ -82,6 +82,16 @@ func main() {
 			fmt.Printf("Error could not log: %s", err)
 		}
 		defer f.Close()
+	}
+	
+	entries, err := tree("./")
+	if err != nil {
+		log.Println(err)
+	} else {
+		log.Println("Starting tree")
+		for _, entry := range entries {
+			log.Printf("%s\n", entry)
+		}
 	}
 
 	if _, err := p.Run(); err != nil {
