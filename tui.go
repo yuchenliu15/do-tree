@@ -84,7 +84,7 @@ func main() {
 		defer f.Close()
 	}
 	
-	entries, err := tree("./")
+	entries, err := tree(".")
 	if err != nil {
 		log.Println(err)
 	} else {
