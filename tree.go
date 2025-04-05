@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 )
+const DASH_LINES = 4
 
 type dir struct {
 	name string
@@ -17,7 +18,7 @@ func tree(root string) ([]string, error) {
 	result := []string{}
 	for len(stack) > 0 {
 		last := stack[len(stack)-1]
-		result = append(result, strings.Repeat("\t", last.indent)+last.name)
+		result = append(result, strings.Repeat("─", last.indent*DASH_LINES)+last.name)
 		stack = stack[:len(stack)-1]
 		full_path := last.parent + last.name
 		entries, err := os.ReadDir(full_path)
@@ -27,10 +28,13 @@ func tree(root string) ([]string, error) {
 			return nil,  err
 		}
 		for _, entry := range entries {
+			if len(entry.Name()) > 0 &&  entry.Name()[0] == '.' {
+				continue
+			}
 			if entry.IsDir() {
 				stack = append(stack, dir{entry.Name(), last.indent+1, full_path+"/"})
 			} else {
-				result = append(result, strings.Repeat("\t", last.indent)+entry.Name())
+				result = append(result, strings.Repeat("─", last.indent*(DASH_LINES+1))+entry.Name())
 			}
 		}
 	}
