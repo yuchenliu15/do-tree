@@ -93,9 +93,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						selected = append(selected, choice)
 					}
 				}
-				commandInput := []string{}
-				commandInput = append(commandInput, strings.Split(m.textInput.Value(), " ")...)
-				commandInput = append(commandInput, selected...)
+				commandInput := append(strings.Split(m.textInput.Value(), " "), selected...)
 				m.state = Result
 				command := exec.Command(commandInput[0], commandInput[1:]...)
 				output, err := command.CombinedOutput()
