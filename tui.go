@@ -18,9 +18,9 @@ type model struct {
 	selected map[int]struct{}
 }
 
-func initalModel() model {
+func initalModel(choices []string) model {
 	return model{
-		choices: []string{"carrorts", "potatoes", "onions"},
+		choices: choices,
 		selected: make(map[int]struct{}),
 	}
 }
@@ -57,7 +57,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	s := "here's the market\n"
+	s := "Select file/dir to apply command to:\n"
 	for i, choice := range m.choices {
 		cursor := " "
 		if m.cursor == i {
@@ -72,9 +72,7 @@ func (m model) View() string {
 	return s
 }
 
-func main() {
-	p := tea.NewProgram(initalModel())
-	
+func main() {	
 	if len(os.Getenv("DEBUG")) > 0 {
 		fmt.Printf("Running in debug mode\n")
 		f, err := tea.LogToFile("debug.log", "debug")
@@ -84,15 +82,12 @@ func main() {
 		defer f.Close()
 	}
 	
-	entries, err := tree(".")
+	entries, err := tree("./")
 	if err != nil {
 		log.Println(err)
-	} else {
-		log.Println("Starting tree")
-		for _, entry := range entries {
-			log.Printf("%s\n", entry)
-		}
-	}
+	}	
+	
+	p := tea.NewProgram(initalModel(entries))
 
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Error occured: %v\n", err)
