@@ -49,35 +49,49 @@ func (m model) Init() tea.Cmd {
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	log.Printf("msg: %T\n", msg)
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c", "q":
-			return m, tea.Quit	
-		case "up":
-			if m.cursor > 0 {
-				m.cursor--
-			}
-		case "down":
-			if m.cursor < len(m.choices)-1 {
-				m.cursor++
-			}
-		case "enter":
-			_, ok := m.selected[m.cursor]
-			if ok {
-				delete(m.selected, m.cursor)
-			} else {
-				m.selected[m.cursor] = struct{}{}
-			}
-		case " ":
-			if m.state == Selecting {
+	switch state := m.state; state {
+	case Selecting:
+		switch msg := msg.(type) {
+		case tea.KeyMsg:
+			switch msg.String() {
+			case "ctrl+c", "q":
+				return m, tea.Quit	
+			case "up":
+				if m.cursor > 0 {
+					m.cursor--
+				}
+			case "down":
+				if m.cursor < len(m.choices)-1 {
+					m.cursor++
+				}
+			case "enter":
+				_, ok := m.selected[m.cursor]
+				if ok {
+					delete(m.selected, m.cursor)
+				} else {
+					m.selected[m.cursor] = struct{}{}
+				}
+			case " ":
 				m.state = Staging
-			} else {
-				m.state = Selecting
 			}
 		}
+	case Staging:
+		switch msg := msg.(type) {
+		case tea.KeyMsg:
+			switch msg.String() {
+			case "ctrl+c":
+				return m, tea.Quit
+			case "enter":
+				log.Printf("Input: %s", m.textInput.Value())
+				return m, nil
+			case "esc":
+				m.state = Selecting
+				m.textInput.Reset()
+				return m, nil
+			}
+			m.textInput, cmd = m.textInput.Update(msg)
+		}
 	}
-	m.textInput, cmd = m.textInput.Update(msg)
 	return m, cmd 
 }
 
