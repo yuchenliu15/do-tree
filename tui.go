@@ -12,16 +12,24 @@ import (
     tea "github.com/charmbracelet/bubbletea"
 )
 
+type State int
+const (
+	Selecting State = iota
+	Staging
+)
+
 type model struct {
 	choices []string
 	cursor int
 	selected map[int]struct{}
+	state State 
 }
 
 func initalModel(choices []string) model {
 	return model{
 		choices: choices,
 		selected: make(map[int]struct{}),
+		state: Selecting,
 	}
 }
 
@@ -51,23 +59,44 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			} else {
 				m.selected[m.cursor] = struct{}{}
 			}
+		case " ":
+			if m.state == Selecting {
+				m.state = Staging
+			} else {
+				m.state = Selecting
+			}
 		}
 	}
 	return m, nil
 }
 
 func (m model) View() string {
-	s := "Select file/dir to apply command to:\n"
-	for i, choice := range m.choices {
-		cursor := " "
-		if m.cursor == i {
-			cursor = ">"
+	var s string
+	if m.state == Selecting {
+		s = "Select file/dir to apply command to:\n"
+		s += "(Hit space to enter comand)\n"
+		for i, choice := range m.choices {
+			cursor := " "
+			if m.cursor == i {
+				cursor = ">"
+			}
+			checked := " "
+			if _, ok := m.selected[i]; ok {
+				checked = "x"
+			}
+			s += fmt.Sprintf("%s [%s] %s\n", cursor, checked, choice)
 		}
-		checked := " "
-		if _, ok := m.selected[i]; ok {
-			checked = "x"
+	} else {
+		selected := []string{}
+		for i, choice := range m.choices {
+			if _, ok := m.selected[i]; ok {
+				selected = append(selected, choice)
+			}
 		}
-		s += fmt.Sprintf("%s [%s] %s\n", cursor, checked, choice)
+		s = "Enter command to apply to selected files:\n"
+		s += fmt.Sprintln(selected)
+		s += "(Hit space to enter comand)\n"
+
 	}
 	return s
 }
