@@ -10,6 +10,7 @@ import (
 	"log"
 
     tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/bubbles/textinput"
 )
 
 type State int
@@ -23,21 +24,30 @@ type model struct {
 	cursor int
 	selected map[int]struct{}
 	state State 
+	textInput textinput.Model
 }
 
 func initalModel(choices []string) model {
+	ti := textinput.New()
+	ti.Placeholder = ""
+	ti.Focus()
+	ti.CharLimit = 156
+	ti.Width = 20
+
 	return model{
 		choices: choices,
 		selected: make(map[int]struct{}),
 		state: Selecting,
+		textInput: ti,
 	}
 }
 
 func (m model) Init() tea.Cmd {
-	return nil
+	return textinput.Blink 
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
 	log.Printf("msg: %T\n", msg)
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -67,7 +77,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 	}
-	return m, nil
+	m.textInput, cmd = m.textInput.Update(msg)
+	return m, cmd 
 }
 
 func (m model) View() string {
@@ -96,7 +107,7 @@ func (m model) View() string {
 		s = "Enter command to apply to selected files:\n"
 		s += fmt.Sprintln(selected)
 		s += "(Hit space to enter comand)\n"
-
+		s += m.textInput.View()
 	}
 	return s
 }
