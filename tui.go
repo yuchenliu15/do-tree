@@ -1,22 +1,25 @@
-package main 
+package main
 
 // These imports will be used later on the tutorial. If you save the file
 // now, Go might complain they are unused, but that's fine.
 // You may also need to run `go mod tidy` to download bubbletea and its
 // dependencies.
 import (
-    "fmt"
-    "os"
+	"fmt"
 	"log"
+	"os"
+	"os/exec"
+	"strings"
 
-    tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/bubbles/textinput"
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 type State int
 const (
 	Selecting State = iota
 	Staging
+	Result
 )
 
 type model struct {
@@ -25,6 +28,7 @@ type model struct {
 	selected map[int]struct{}
 	state State 
 	textInput textinput.Model
+	output string
 }
 
 func initalModel(choices []string) model {
@@ -83,6 +87,25 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, tea.Quit
 			case "enter":
 				log.Printf("Input: %s", m.textInput.Value())
+				selected := []string{}
+				for i, choice := range m.choices {
+					if _, ok := m.selected[i]; ok {
+						selected = append(selected, choice)
+					}
+				}
+				commandInput := []string{}
+				commandInput = append(commandInput, strings.Split(m.textInput.Value(), " ")...)
+				commandInput = append(commandInput, selected...)
+				m.state = Result
+				command := exec.Command(commandInput[0], commandInput[1:]...)
+				output, err := command.CombinedOutput()
+				if err != nil {
+					log.Printf("Error: %v\n", err)
+					return m, tea.Quit
+				}
+				m.output = string(output)
+				m.textInput.Reset()
+				
 				return m, nil
 			case "esc":
 				m.state = Selecting
@@ -91,6 +114,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			m.textInput, cmd = m.textInput.Update(msg)
 		}
+	case Result:
+		return m, tea.Quit
 	}
 	return m, cmd 
 }
@@ -111,7 +136,7 @@ func (m model) View() string {
 			}
 			s += fmt.Sprintf("%s [%s] %s\n", cursor, checked, choice)
 		}
-	} else {
+	} else if m.state == Staging{
 		selected := []string{}
 		for i, choice := range m.choices {
 			if _, ok := m.selected[i]; ok {
@@ -122,6 +147,9 @@ func (m model) View() string {
 		s += fmt.Sprintln(selected)
 		s += "(Hit space to enter comand)\n"
 		s += m.textInput.View()
+	} else {
+		s = "Result:\n"
+		s += m.output
 	}
 	return s
 }
