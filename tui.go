@@ -127,14 +127,11 @@ func (m model) View() string {
 }
 
 func main() {	
-	if len(os.Getenv("DEBUG")) > 0 {
-		fmt.Printf("Running in debug mode\n")
-		f, err := tea.LogToFile("debug.log", "debug")
-		if err != nil {
-			fmt.Printf("Error could not log: %s", err)
-		}
-		defer f.Close()
+	f, err := tea.LogToFile("debug.log", "debug")
+	if err != nil {
+		fmt.Printf("Error could not log: %s", err)
 	}
+	defer f.Close()
 	
 	entries, err := tree("./")
 	if err != nil {
